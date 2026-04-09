@@ -1,0 +1,39 @@
+name: babbelgender
+description: "Practice German noun genders with your Babbel vocabulary."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State management
+  provider: ^6.1.2
+
+  # File picking
+  file_picker: ^8.1.2
+
+  # Persistent settings
+  shared_preferences: ^2.3.2
+
+  # Sound effects
+  audioplayers: ^6.1.0
+
+  # Animations
+  flutter_animate: ^4.5.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/sounds/
