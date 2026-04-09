@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:provider/provider.dart';
 import 'providers/vocabulary_provider.dart';
 import 'providers/settings_provider.dart';
@@ -10,7 +11,9 @@ import 'screens/settings_screen.dart';
 import 'screens/results_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+
   final settings = SettingsProvider();
   final vocabulary = VocabularyProvider();
   await Future.wait([
@@ -18,6 +21,8 @@ void main() async {
     vocabulary.loadFromPrefs(),
     SoundService.init(),
   ]);
+
+  FlutterNativeSplash.remove();
   runApp(BabbelGenderApp(settings: settings, vocabulary: vocabulary));
 }
 
