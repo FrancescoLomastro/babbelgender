@@ -12,23 +12,26 @@ import 'screens/results_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = SettingsProvider();
+  final vocabulary = VocabularyProvider();
   await Future.wait([
     settings.load(),
+    vocabulary.loadFromPrefs(),
     SoundService.init(),
   ]);
-  runApp(BabbelGenderApp(settings: settings));
+  runApp(BabbelGenderApp(settings: settings, vocabulary: vocabulary));
 }
 
 class BabbelGenderApp extends StatelessWidget {
   final SettingsProvider settings;
+  final VocabularyProvider vocabulary;
 
-  const BabbelGenderApp({super.key, required this.settings});
+  const BabbelGenderApp({super.key, required this.settings, required this.vocabulary});
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => VocabularyProvider()),
+        ChangeNotifierProvider.value(value: vocabulary),
         ChangeNotifierProvider.value(value: settings),
       ],
       child: MaterialApp(

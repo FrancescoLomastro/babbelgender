@@ -75,7 +75,9 @@ class _PracticeScreenState extends State<PracticeScreen>
       final vocab = context.read<VocabularyProvider>();
       final settings = context.read<SettingsProvider>();
       final count = settings.resolveCount(vocab.nouns.length);
-      _practice = PracticeProvider(nouns: vocab.nouns.take(count).toList());
+      // Shuffle the full pool first so the selected subset is random each session.
+      final pool = List<Noun>.from(vocab.nouns)..shuffle();
+      _practice = PracticeProvider(nouns: pool.take(count).toList());
     }
   }
 
@@ -174,12 +176,11 @@ class _PracticeScreenState extends State<PracticeScreen>
                     ),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
 
                   // ── Noun card with animations ─────────────────────
-                  Expanded(
-                    child: Center(
-                      child: AnimatedBuilder(
+                  Center(
+                    child: AnimatedBuilder(
                         animation:
                             Listenable.merge([_shakeCtrl, _bounceCtrl]),
                         builder: (context, child) {
@@ -209,14 +210,17 @@ class _PracticeScreenState extends State<PracticeScreen>
                           ),
                         ),
                       ),
-                    ),
                   ),
 
-                  // ── Drop zones ────────────────────────────────────
-                  _DropZoneLayout(
-                    feedbackGender: _feedbackGender,
-                    feedbackCorrect: _feedbackCorrect,
-                    onDrop: _handleDrop,
+                  const SizedBox(height: 16),
+
+                  // ── Drop zones — fill remaining height ────────────
+                  Expanded(
+                    child: _DropZoneLayout(
+                      feedbackGender: _feedbackGender,
+                      feedbackCorrect: _feedbackCorrect,
+                      onDrop: _handleDrop,
+                    ),
                   ),
                 ],
               ),
@@ -248,34 +252,27 @@ class _DropZoneLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: GenderDropZone(
-                gender: Gender.masculine,
-                onDrop: onDrop,
-                feedbackResult: _feedbackFor(Gender.masculine),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: GenderDropZone(
-                gender: Gender.feminine,
-                onDrop: onDrop,
-                feedbackResult: _feedbackFor(Gender.feminine),
-              ),
-            ),
-          ],
+        Expanded(
+          child: GenderDropZone(
+            gender: Gender.masculine,
+            onDrop: onDrop,
+            feedbackResult: _feedbackFor(Gender.masculine),
+          ),
         ),
-        const SizedBox(height: 12),
-        Center(
-          child: SizedBox(
-            width: 180,
-            child: GenderDropZone(
-              gender: Gender.neuter,
-              onDrop: onDrop,
-              feedbackResult: _feedbackFor(Gender.neuter),
-            ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: GenderDropZone(
+            gender: Gender.feminine,
+            onDrop: onDrop,
+            feedbackResult: _feedbackFor(Gender.feminine),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: GenderDropZone(
+            gender: Gender.neuter,
+            onDrop: onDrop,
+            feedbackResult: _feedbackFor(Gender.neuter),
           ),
         ),
       ],

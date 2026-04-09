@@ -23,7 +23,7 @@ class NounCard extends StatelessWidget {
     final cardFace = Material(
       color: Colors.transparent,
       child: Container(
-        width: 220,
+        width: 280,
         padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
         decoration: BoxDecoration(
           color: AppTheme.cardBackground,
@@ -40,15 +40,8 @@ class NounCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // German word (without article)
-            Text(
-              noun.word,
-              style: theme.textTheme.displaySmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF1A1A2E),
-              ),
-              textAlign: TextAlign.center,
-            ),
+            // German word — first word in warm orange, rest in dark
+            _NounWordText(word: noun.word, baseStyle: theme.textTheme.displaySmall),
             const SizedBox(height: 20),
             // Translation toggle
             GestureDetector(
@@ -61,7 +54,7 @@ class NounCard extends StatelessWidget {
                         noun.translation.isEmpty ? '—' : noun.translation,
                         key: const ValueKey('shown'),
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: const Color(0xFF555577),
+                          color: const Color(0xFF333333),
                           fontStyle: FontStyle.italic,
                         ),
                         textAlign: TextAlign.center,
@@ -101,6 +94,51 @@ class NounCard extends StatelessWidget {
       ),
       childWhenDragging: Opacity(opacity: 0.25, child: cardFace),
       child: cardFace,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helper: colors first word in warm orange, remaining words in dark
+// ---------------------------------------------------------------------------
+
+class _NounWordText extends StatelessWidget {
+  final String word;
+  final TextStyle? baseStyle;
+
+  const _NounWordText({required this.word, this.baseStyle});
+
+  static const Color _highlightColor = Color(0xFFF57C00); // warm orange
+  static const Color _restColor = Color(0xFF1A1A2E);       // near-black
+
+  @override
+  Widget build(BuildContext context) {
+    final style = baseStyle?.copyWith(fontWeight: FontWeight.w800) ??
+        const TextStyle(fontWeight: FontWeight.w800);
+
+    final parts = word.split(' ');
+
+    // Find the index of the first word that starts with an uppercase letter
+    // (in German, nouns are always capitalized — that's the target word).
+    final highlightIndex = parts.indexWhere(
+      (p) => p.isNotEmpty && p[0] == p[0].toUpperCase() && p[0] != p[0].toLowerCase(),
+    );
+
+    return Text.rich(
+      TextSpan(
+        children: parts.asMap().entries.map((entry) {
+          final i = entry.key;
+          final part = entry.value;
+          final isHighlighted = i == highlightIndex;
+          return TextSpan(
+            text: i == 0 ? part : ' $part',
+            style: style.copyWith(
+              color: isHighlighted ? _highlightColor : _restColor,
+            ),
+          );
+        }).toList(),
+      ),
+      textAlign: TextAlign.center,
     );
   }
 }

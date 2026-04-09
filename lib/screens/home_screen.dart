@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
     }
 
     if (context.mounted) {
-      context.read<VocabularyProvider>().loadFromJson(jsonString, file.name);
+      await context.read<VocabularyProvider>().loadFromJson(jsonString, file.name);
     }
   }
 

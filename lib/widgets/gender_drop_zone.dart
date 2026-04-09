@@ -16,16 +16,8 @@ class GenderDropZone extends StatelessWidget {
     this.feedbackResult,
   });
 
-  Color get _genderColor {
-    switch (gender) {
-      case Gender.masculine:
-        return AppTheme.masculineColor;
-      case Gender.feminine:
-        return AppTheme.feminineColor;
-      case Gender.neuter:
-        return AppTheme.neuterColor;
-    }
-  }
+  // Neutral color for idle and hover states — no gender hint.
+  static const Color _neutralColor = Color(0xFF607D8B); // blue-grey
 
   String get _icon {
     switch (gender) {
@@ -59,12 +51,12 @@ class GenderDropZone extends StatelessWidget {
           borderOpacity = 1.0;
           borderWidth = 2.5;
         } else if (isHovering) {
-          activeColor = _genderColor;
+          activeColor = _neutralColor;
           bgOpacity = 0.18;
           borderOpacity = 0.85;
           borderWidth = 2.5;
         } else {
-          activeColor = _genderColor;
+          activeColor = _neutralColor;
           bgOpacity = 0.08;
           borderOpacity = 0.40;
           borderWidth = 1.5;
@@ -72,7 +64,6 @@ class GenderDropZone extends StatelessWidget {
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          height: 90,
           decoration: BoxDecoration(
             color: activeColor.withOpacity(bgOpacity),
             borderRadius: BorderRadius.circular(16),
