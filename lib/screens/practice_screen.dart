@@ -5,6 +5,7 @@ import '../models/noun.dart';
 import '../providers/practice_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/vocabulary_provider.dart';
+import '../services/sound_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/gender_drop_zone.dart';
 import '../widgets/noun_card.dart';
@@ -16,7 +17,8 @@ class PracticeScreen extends StatefulWidget {
   State<PracticeScreen> createState() => _PracticeScreenState();
 }
 
-class _PracticeScreenState extends State<PracticeScreen> {
+class _PracticeScreenState extends State<PracticeScreen>
+    with TickerProviderStateMixin {
   late final PracticeProvider _practice;
   bool _initialized = false;
 
@@ -25,6 +27,43 @@ class _PracticeScreenState extends State<PracticeScreen> {
   bool _isDropping = false;
   Gender? _feedbackGender;
   bool? _feedbackCorrect;
+
+  // ── Animation controllers ───────────────────────────────────────────────────
+
+  late final AnimationController _shakeCtrl;
+  late final Animation<double> _shakeAnim; // horizontal offset (px)
+
+  late final AnimationController _bounceCtrl;
+  late final Animation<double> _bounceAnim; // scale factor
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Shake: left-right oscillation for wrong answers
+    _shakeCtrl = AnimationController(
+      duration: const Duration(milliseconds: 450),
+      vsync: this,
+    );
+    _shakeAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -14.0), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -14.0, end: 14.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 14.0, end: -10.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -10.0, end: 8.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 8.0, end: 0.0), weight: 1),
+    ]).animate(_shakeCtrl);
+
+    // Bounce: scale up then spring back for correct answers
+    _bounceCtrl = AnimationController(
+      duration: const Duration(milliseconds: 350),
+      vsync: this,
+    );
+    _bounceAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.18), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 1.18, end: 0.90), weight: 30),
+      TweenSequenceItem(tween: Tween(begin: 0.90, end: 1.0), weight: 35),
+    ]).animate(CurvedAnimation(parent: _bounceCtrl, curve: Curves.easeInOut));
+  }
 
   // ── Initialization ──────────────────────────────────────────────────────────
 
@@ -43,6 +82,8 @@ class _PracticeScreenState extends State<PracticeScreen> {
   @override
   void dispose() {
     _practice.dispose();
+    _shakeCtrl.dispose();
+    _bounceCtrl.dispose();
     super.dispose();
   }
 
@@ -52,6 +93,14 @@ class _PracticeScreenState extends State<PracticeScreen> {
     if (_isDropping) return;
 
     final correct = _practice.checkAnswer(zoneGender);
+
+    if (correct) {
+      SoundService.playCorrect();
+      _bounceCtrl.forward(from: 0);
+    } else {
+      SoundService.playWrong();
+      _shakeCtrl.forward(from: 0);
+    }
 
     setState(() {
       _isDropping = true;
@@ -77,7 +126,7 @@ class _PracticeScreenState extends State<PracticeScreen> {
       setState(() {
         _isDropping = false;
         _feedbackGender = null;
-        _feedbackCorrect = false;
+        _feedbackCorrect = null; // ← null, not false
         _translationVisible = false;
       });
     });
@@ -92,7 +141,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
       builder: (context, _) {
         final noun = _practice.currentNoun;
 
-        // Safety net while completing (shouldn't be visible)
         if (noun == null) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -128,22 +176,36 @@ class _PracticeScreenState extends State<PracticeScreen> {
 
                   const SizedBox(height: 8),
 
-                  // ── Noun card area ────────────────────────────────
+                  // ── Noun card with animations ─────────────────────
                   Expanded(
                     child: Center(
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        // hide card while correct-answer feedback plays
-                        opacity: (_isDropping && _feedbackCorrect == true)
-                            ? 0.0
-                            : (_isDropping ? 0.45 : 1.0),
-                        child: NounCard(
-                          key: ValueKey(noun.id),
-                          noun: noun,
-                          translationVisible: _translationVisible,
-                          draggable: !_isDropping,
-                          onTranslationToggle: () => setState(
-                            () => _translationVisible = !_translationVisible,
+                      child: AnimatedBuilder(
+                        animation:
+                            Listenable.merge([_shakeCtrl, _bounceCtrl]),
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(_shakeAnim.value, 0),
+                            child: Transform.scale(
+                              scale: _bounceAnim.value,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: AnimatedOpacity(
+                          duration: const Duration(milliseconds: 200),
+                          opacity:
+                              (_isDropping && _feedbackCorrect == true)
+                                  ? 0.0
+                                  : (_isDropping ? 0.40 : 1.0),
+                          child: NounCard(
+                            key: ValueKey(noun.id),
+                            noun: noun,
+                            translationVisible: _translationVisible,
+                            draggable: !_isDropping,
+                            onTranslationToggle: () => setState(
+                              () =>
+                                  _translationVisible = !_translationVisible,
+                            ),
                           ),
                         ),
                       ),
@@ -186,7 +248,6 @@ class _DropZoneLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // der (left)  |  die (right)
         Row(
           children: [
             Expanded(
@@ -207,7 +268,6 @@ class _DropZoneLayout extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        // das (center bottom)
         Center(
           child: SizedBox(
             width: 180,

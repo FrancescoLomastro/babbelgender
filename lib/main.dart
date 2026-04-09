@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/vocabulary_provider.dart';
 import 'providers/settings_provider.dart';
+import 'services/sound_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/practice_screen.dart';
@@ -11,7 +12,10 @@ import 'screens/results_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = SettingsProvider();
-  await settings.load();
+  await Future.wait([
+    settings.load(),
+    SoundService.init(),
+  ]);
   runApp(BabbelGenderApp(settings: settings));
 }
 
