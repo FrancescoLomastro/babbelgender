@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/vocabulary_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/home_screen.dart';
 import 'screens/practice_screen.dart';
@@ -14,17 +16,22 @@ class BabbelGenderApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'BabbelGender',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      initialRoute: '/',
-      routes: {
-        '/': (_) => const HomeScreen(),
-        '/settings': (_) => const SettingsScreen(),
-        '/practice': (_) => const PracticeScreen(),
-        '/results': (_) => const ResultsScreen(),
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => VocabularyProvider()),
+      ],
+      child: MaterialApp(
+        title: 'BabbelGender',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        initialRoute: '/',
+        routes: {
+          '/': (_) => const HomeScreen(),
+          '/settings': (_) => const SettingsScreen(),
+          '/practice': (_) => const PracticeScreen(),
+          '/results': (_) => const ResultsScreen(),
+        },
+      ),
     );
   }
 }
