@@ -21,9 +21,6 @@ dependencies:
   # Persistent settings
   shared_preferences: ^2.3.2
 
-  # Sound effects
-  audioplayers: ^6.1.0
-
   # Animations
   flutter_animate: ^4.5.0
 
@@ -58,5 +55,4 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/sounds/
     - assets/logo.png

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../models/noun.dart';
 import '../providers/practice_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/vocabulary_provider.dart';
-import '../services/sound_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/gender_drop_zone.dart';
 import '../widgets/noun_card.dart';
@@ -97,10 +97,10 @@ class _PracticeScreenState extends State<PracticeScreen>
     final correct = _practice.checkAnswer(zoneGender);
 
     if (correct) {
-      SoundService.playCorrect();
+      HapticFeedback.lightImpact();
       _bounceCtrl.forward(from: 0);
     } else {
-      SoundService.playWrong();
+      HapticFeedback.heavyImpact();
       _shakeCtrl.forward(from: 0);
     }
 
